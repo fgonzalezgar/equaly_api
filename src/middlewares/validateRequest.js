@@ -28,6 +28,18 @@ const registerSchema = Joi.object({
     })
 });
 
+const loginSchema = Joi.object({
+    email: Joi.string().email().required().messages({
+        'string.email': 'El correo electrónico no es válido',
+        'string.empty': 'El correo electrónico es obligatorio',
+        'any.required': 'El correo electrónico es obligatorio'
+    }),
+    password: Joi.string().required().messages({
+        'string.empty': 'La contraseña es obligatoria',
+        'any.required': 'La contraseña es obligatoria'
+    })
+});
+
 const validateRegistration = (req, res, next) => {
     const { error } = registerSchema.validate(req.body, { abortEarly: false });
     if (error) {
@@ -37,6 +49,16 @@ const validateRegistration = (req, res, next) => {
     next();
 };
 
+const validateLogin = (req, res, next) => {
+    const { error } = loginSchema.validate(req.body, { abortEarly: false });
+    if (error) {
+        const errors = error.details.map((detail) => detail.message);
+        return res.status(400).json({ success: false, errors });
+    }
+    next();
+};
+
 module.exports = {
-    validateRegistration
+    validateRegistration,
+    validateLogin
 };

@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/userController');
-const { validateRegistration } = require('../middlewares/validateRequest');
+const { validateRegistration, validateLogin } = require('../middlewares/validateRequest');
 
 /**
  * @swagger
@@ -86,6 +86,74 @@ const { validateRegistration } = require('../middlewares/validateRequest');
  *         description: Internal server error
  */
 router.post('/register', validateRegistration, userController.registerUser);
+
+/**
+ * @swagger
+ * /api/users/login:
+ *   post:
+ *     summary: Log in a user
+ *     description: Authenticates a user with email and password, and returns a JWT token.
+ *     tags: [Users]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: tu@email.com
+ *               password:
+ *                 type: string
+ *                 example: Secreta123!
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Inicio de sesión exitoso
+ *                 token:
+ *                   type: string
+ *                   example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                       example: 1
+ *                     first_name:
+ *                       type: string
+ *                       example: Juan
+ *                     last_name:
+ *                       type: string
+ *                       example: Perez
+ *                     country:
+ *                       type: string
+ *                       example: Ecuador
+ *                     email:
+ *                       type: string
+ *                       example: tu@email.com
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Invalid credentials
+ *       500:
+ *         description: Internal server error
+ */
+router.post('/login', validateLogin, userController.loginUser);
 
 /**
  * @swagger
