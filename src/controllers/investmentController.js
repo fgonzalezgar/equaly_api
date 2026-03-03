@@ -1,7 +1,53 @@
 const Stripe = require('stripe');
-const stripe = Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder');
+const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 const PlanModel = require('../models/planModel');
 const InvestmentModel = require('../models/investmentModel');
+
+// Webhook Handler for Stripe
+const handleStripeWebhook = async (req, res) => {
+    const sig = req.headers['stripe-signature'];
+    let event;
+
+    try {
+        // Stripe expects the raw body here
+        event = stripe.webhooks.constructEvent(
+            req.body,
+            sig,
+            process.env.STRIPE_WEBHOOK_SECRET || 'whsec_placeholder'
+        );
+    } catch (err) {
+        console.error('Webhook signature verification failed:', err.message);
+        return res.status(400).send(`Webhook Error: ${err.message}`);
+    }
+
+    // Handle the event
+    if (event.type === 'checkout.session.completed') {
+        const session = event.data.object;
+
+        const stripePaymentId = session.id;
+        const metadata = session.metadata;
+
+        if (metadata && metadata.planId) {
+            const planId = metadata.planId;
+            // Find plan to get duration
+            const plan = await PlanModel.findById(planId);
+            const duration = plan ? plan.duration_days : 30;
+
+            const now = new Date();
+            const endDate = new Date(now);
+            endDate.setDate(endDate.getDate() + duration);
+
+            try {
+                await InvestmentModel.updateStatus(stripePaymentId, 'active', now, endDate);
+                console.log(`Investment ${stripePaymentId} activated via Webhook`);
+            } catch (error) {
+                console.error('Error updating investment status in webhook:', error);
+            }
+        }
+    }
+
+    res.json({ received: true });
+};
 
 const getPlans = async (req, res, next) => {
     try {
@@ -99,11 +145,8 @@ const createInvestmentIntent = async (req, res, next) => {
 const confirmInvestment = async (req, res, next) => {
     try {
         const { stripePaymentId } = req.body;
-        // In reality, this should be validated instantly using a Stripe Webhook instead of trusting client side.
-        // For the sake of the exercise, we allow the client to confirm.
 
         const now = new Date();
-        // Since we don't have the plan explicitly here, we might need a better DB trigger, but let's mock the 30 days.
         const endDate = new Date(now);
         endDate.setDate(endDate.getDate() + 30);
 
@@ -124,5 +167,6 @@ module.exports = {
     getPlans,
     getUserInvestments,
     createInvestmentIntent,
-    confirmInvestment
+    confirmInvestment,
+    handleStripeWebhook
 };

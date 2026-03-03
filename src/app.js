@@ -10,10 +10,15 @@ const swaggerSetup = require('./config/swagger');
 
 const app = express();
 
-// Middlewares
+// Webhook route must be before express.json() to receive raw body for Stripe signature
+const investmentController = require('./controllers/investmentController');
+app.post('/api/investments/webhook', express.raw({ type: 'application/json' }), investmentController.handleStripeWebhook);
+
+// Regular Middlewares
 app.use(helmet());
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
 
 // Static files
