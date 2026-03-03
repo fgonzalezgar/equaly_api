@@ -13,9 +13,10 @@ const registerSchema = Joi.object({
         'string.empty': 'El país es obligatorio',
         'any.required': 'El país es obligatorio'
     }),
-    phone: Joi.string().trim().required().messages({
-        'string.empty': 'El teléfono es obligatorio',
-        'any.required': 'El teléfono es obligatorio'
+    password: Joi.string().min(6).required().messages({
+        'string.empty': 'La contraseña es obligatoria',
+        'string.min': 'La contraseña debe tener al menos 6 caracteres',
+        'any.required': 'La contraseña es obligatoria'
     }),
     email: Joi.string().email().required().messages({
         'string.email': 'El correo electrónico no es válido',

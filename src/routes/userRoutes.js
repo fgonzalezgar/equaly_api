@@ -20,7 +20,7 @@ const { validateRegistration } = require('../middlewares/validateRequest');
  *               - firstName
  *               - lastName
  *               - country
- *               - phone
+ *               - password
  *               - email
  *               - acceptedTerms
  *             properties:
@@ -32,10 +32,10 @@ const { validateRegistration } = require('../middlewares/validateRequest');
  *                 example: Perez
  *               country:
  *                 type: string
- *                 example: Ecuador (+593)
- *               phone:
+ *                 example: Ecuador
+ *               password:
  *                 type: string
- *                 example: 0991234567
+ *                 example: Secreta123!
  *               email:
  *                 type: string
  *                 format: email
