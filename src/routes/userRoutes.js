@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/userController');
+const authMiddleware = require('../middlewares/authMiddleware');
 const { validateRegistration, validateLogin } = require('../middlewares/validateRequest');
 
 /**
@@ -8,7 +9,7 @@ const { validateRegistration, validateLogin } = require('../middlewares/validate
  * /api/users/register:
  *   post:
  *     summary: Register a new user
- *     description: Registers a new user with their form information and stores them in the Supabase PostgreSQL database.
+ *     description: Registers a new user. Supports optional referral code.
  *     tags: [Users]
  *     requestBody:
  *       required: true
@@ -38,52 +39,16 @@ const { validateRegistration, validateLogin } = require('../middlewares/validate
  *                 example: Secreta123!
  *               email:
  *                 type: string
- *                 format: email
  *                 example: tu@email.com
  *               acceptedTerms:
  *                 type: boolean
  *                 example: true
+ *               referredByCode:
+ *                 type: string
+ *                 example: REF123
  *     responses:
  *       201:
  *         description: User registered successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: Usuario registrado exitosamente
- *                 data:
- *                   type: object
- *                   properties:
- *                     id:
- *                       type: integer
- *                       example: 1
- *                     first_name:
- *                       type: string
- *                       example: Juan
- *                     last_name:
- *                       type: string
- *                       example: Perez
- *                     country:
- *                       type: string
- *                       example: Ecuador (+593)
- *                     email:
- *                       type: string
- *                       example: tu@email.com
- *                     accepted_terms:
- *                       type: boolean
- *                       example: true
- *       400:
- *         description: Validation error
- *       409:
- *         description: Email already exists
- *       500:
- *         description: Internal server error
  */
 router.post('/register', validateRegistration, userController.registerUser);
 
@@ -92,7 +57,7 @@ router.post('/register', validateRegistration, userController.registerUser);
  * /api/users/login:
  *   post:
  *     summary: Log in a user
- *     description: Authenticates a user with email and password, and returns a JWT token.
+ *     description: Authenticates a user and returns a JWT token plus referral information.
  *     tags: [Users]
  *     requestBody:
  *       required: true
@@ -106,7 +71,6 @@ router.post('/register', validateRegistration, userController.registerUser);
  *             properties:
  *               email:
  *                 type: string
- *                 format: email
  *                 example: tu@email.com
  *               password:
  *                 type: string
@@ -114,90 +78,34 @@ router.post('/register', validateRegistration, userController.registerUser);
  *     responses:
  *       200:
  *         description: Login successful
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: Inicio de sesión exitoso
- *                 token:
- *                   type: string
- *                   example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
- *                 data:
- *                   type: object
- *                   properties:
- *                     id:
- *                       type: integer
- *                       example: 1
- *                     first_name:
- *                       type: string
- *                       example: Juan
- *                     last_name:
- *                       type: string
- *                       example: Perez
- *                     country:
- *                       type: string
- *                       example: Ecuador
- *                     email:
- *                       type: string
- *                       example: tu@email.com
- *       400:
- *         description: Validation error
- *       401:
- *         description: Invalid credentials
- *       500:
- *         description: Internal server error
  */
 router.post('/login', validateLogin, userController.loginUser);
+
+/**
+ * @swagger
+ * /api/users/referrals:
+ *   get:
+ *     summary: Get user's referral list
+ *     description: Returns a list of users who registered using this user's referral code. Requires JWT.
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Success
+ */
+router.get('/referrals', authMiddleware, userController.getReferrals);
 
 /**
  * @swagger
  * /api/users:
  *   get:
  *     summary: List all registered users
- *     description: Retrieves a list of all users that have registered via the form, ordered by most recent first.
+ *     description: Admin view of all users.
  *     tags: [Users]
  *     responses:
  *       200:
- *         description: Successful retrieval of users
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 data:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       id:
- *                         type: integer
- *                         example: 1
- *                       first_name:
- *                         type: string
- *                         example: Juan
- *                       last_name:
- *                         type: string
- *                         example: Perez
- *                       country:
- *                         type: string
- *                         example: Ecuador (+593)
- *                       email:
- *                         type: string
- *                         example: tu@email.com
- *                       created_at:
- *                         type: string
- *                         format: date-time
- *       500:
- *         description: Internal server error
+ *         description: Success
  */
 router.get('/', userController.getUsers);
 

@@ -2,6 +2,29 @@ const Stripe = require('stripe');
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 const PlanModel = require('../models/planModel');
 const InvestmentModel = require('../models/investmentModel');
+const UserModel = require('../models/userModel');
+const CommissionModel = require('../models/commissionModel');
+
+// Reusable function to process referral logic
+const processReferralBenefits = async (investment) => {
+    try {
+        const user = await UserModel.findById(investment.user_id);
+        if (user && user.referred_by) {
+            const commissionAmount = parseFloat(investment.amount) * 0.05; // 5% Commission
+            await CommissionModel.create({
+                userId: user.referred_by,
+                fromUserId: user.id,
+                investmentId: investment.id,
+                type: 'referral_5',
+                amount: commissionAmount,
+                description: `Comisión del 5% por inversión de referido: ${user.first_name}`
+            });
+            console.log(`Commission of ${commissionAmount} logic processed for user ${user.referred_by}`);
+        }
+    } catch (error) {
+        console.error('Error processing referral benefits:', error);
+    }
+};
 
 // Webhook Handler for Stripe
 const handleStripeWebhook = async (req, res) => {
@@ -9,7 +32,6 @@ const handleStripeWebhook = async (req, res) => {
     let event;
 
     try {
-        // Stripe expects the raw body here
         event = stripe.webhooks.constructEvent(
             req.body,
             sig,
@@ -20,26 +42,23 @@ const handleStripeWebhook = async (req, res) => {
         return res.status(400).send(`Webhook Error: ${err.message}`);
     }
 
-    // Handle the event
     if (event.type === 'checkout.session.completed') {
         const session = event.data.object;
-
         const stripePaymentId = session.id;
         const metadata = session.metadata;
 
         if (metadata && metadata.planId) {
-            const planId = metadata.planId;
-            // Find plan to get duration
-            const plan = await PlanModel.findById(planId);
+            const plan = await PlanModel.findById(metadata.planId);
             const duration = plan ? plan.duration_days : 30;
-
             const now = new Date();
             const endDate = new Date(now);
             endDate.setDate(endDate.getDate() + duration);
 
             try {
-                await InvestmentModel.updateStatus(stripePaymentId, 'active', now, endDate);
-                console.log(`Investment ${stripePaymentId} activated via Webhook`);
+                const investment = await InvestmentModel.updateStatus(stripePaymentId, 'active', now, endDate);
+                if (investment) {
+                    await processReferralBenefits(investment);
+                }
             } catch (error) {
                 console.error('Error updating investment status in webhook:', error);
             }
@@ -73,13 +92,11 @@ const createInvestmentIntent = async (req, res, next) => {
         const userId = req.user.id;
         const { planId, amount, paymentMethod } = req.body;
 
-        // Verify plan exists
         const plan = await PlanModel.findById(planId);
         if (!plan) {
             return res.status(404).json({ success: false, message: 'El plan no existe' });
         }
 
-        // Validate amount limits
         if (amount < parseFloat(plan.min_amount) || amount > parseFloat(plan.max_amount)) {
             return res.status(400).json({
                 success: false,
@@ -90,23 +107,20 @@ const createInvestmentIntent = async (req, res, next) => {
         let stripePaymentId = null;
         let checkoutUrl = null;
 
-        // Process Stripe if payment method is "Tarjeta Débito" (or credit card)
         if (paymentMethod === 'Tarjeta Débito' || paymentMethod === 'Stripe') {
             const session = await stripe.checkout.sessions.create({
                 payment_method_types: ['card'],
-                line_items: [
-                    {
-                        price_data: {
-                            currency: 'usd',
-                            product_data: {
-                                name: `Inversión: Plan ${plan.name}`,
-                                description: `ROI: ${plan.daily_roi}% Diario por ${plan.duration_days} días`,
-                            },
-                            unit_amount: Math.round(amount * 100), // Stripe uses cents
+                line_items: [{
+                    price_data: {
+                        currency: 'usd',
+                        product_data: {
+                            name: `Inversión: Plan ${plan.name}`,
+                            description: `ROI Diario: ${plan.daily_roi}%`,
                         },
-                        quantity: 1,
+                        unit_amount: Math.round(amount * 100),
                     },
-                ],
+                    quantity: 1,
+                }],
                 mode: 'payment',
                 success_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
                 cancel_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/dashboard`,
@@ -116,26 +130,16 @@ const createInvestmentIntent = async (req, res, next) => {
             stripePaymentId = session.id;
             checkoutUrl = session.url;
         } else {
-            // Mock external Crypto or Wallet payments flow for now
             stripePaymentId = `ext_pay_${Date.now()}`;
         }
 
-        // Register pending investment
         const investment = await InvestmentModel.create({
-            userId,
-            planId,
-            amount,
-            paymentMethod,
-            stripePaymentId
+            userId, planId, amount, paymentMethod, stripePaymentId
         });
 
         res.status(201).json({
             success: true,
-            message: 'Inversión iniciada',
-            data: {
-                investment,
-                checkoutUrl // Redirect User to this URL to complete payment in Stripe Hosted Checkout
-            }
+            data: { investment, checkoutUrl }
         });
     } catch (error) {
         next(error);
@@ -145,19 +149,16 @@ const createInvestmentIntent = async (req, res, next) => {
 const confirmInvestment = async (req, res, next) => {
     try {
         const { stripePaymentId } = req.body;
-
         const now = new Date();
         const endDate = new Date(now);
         endDate.setDate(endDate.getDate() + 30);
 
         const investment = await InvestmentModel.updateStatus(stripePaymentId, 'active', now, endDate);
+        if (investment) {
+            await processReferralBenefits(investment);
+        }
 
-        res.status(200).json({
-            success: true,
-            message: 'Inversión procesada correctamente',
-            data: investment
-        });
-
+        res.status(200).json({ success: true, data: investment });
     } catch (error) {
         next(error);
     }
@@ -166,23 +167,21 @@ const confirmInvestment = async (req, res, next) => {
 const checkPaymentStatus = async (req, res, next) => {
     try {
         const { sessionId } = req.params;
-
-        // Find investment by its stripe_payment_id (which is the session_id)
         const investment = await InvestmentModel.findBySessionId(sessionId);
-
         if (!investment) {
-            return res.status(404).json({
-                success: false,
-                message: 'Inversión no encontrada'
-            });
+            return res.status(404).json({ success: false, message: 'Inversión no encontrada' });
         }
+        res.status(200).json({ success: true, status: investment.status, data: investment });
+    } catch (error) {
+        next(error);
+    }
+};
 
-        res.status(200).json({
-            success: true,
-            status: investment.status,
-            data: investment
-        });
-
+const getUserCommissions = async (req, res, next) => {
+    try {
+        const userId = req.user.id;
+        const commissions = await CommissionModel.findByUserId(userId);
+        res.status(200).json({ success: true, data: commissions });
     } catch (error) {
         next(error);
     }
@@ -194,5 +193,6 @@ module.exports = {
     createInvestmentIntent,
     confirmInvestment,
     handleStripeWebhook,
-    checkPaymentStatus
+    checkPaymentStatus,
+    getUserCommissions
 };

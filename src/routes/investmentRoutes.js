@@ -35,6 +35,21 @@ router.get('/', authMiddleware, investmentController.getUserInvestments);
 
 /**
  * @swagger
+ * /api/investments/commissions:
+ *   get:
+ *     summary: View your referral commissions
+ *     description: Returns a list of all commissions earned (5% from referrals). Requires JWT.
+ *     tags: [Investments]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Success
+ */
+router.get('/commissions', authMiddleware, investmentController.getUserCommissions);
+
+/**
+ * @swagger
  * /api/investments/checkout:
  *   post:
  *     summary: Create an investment intent with Stripe Checkout

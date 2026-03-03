@@ -25,7 +25,8 @@ const registerSchema = Joi.object({
     acceptedTerms: Joi.boolean().valid(true).required().messages({
         'any.only': 'Debe aceptar los términos y condiciones',
         'any.required': 'Debe aceptar los términos y condiciones'
-    })
+    }),
+    referredByCode: Joi.string().trim().optional().allow('')
 });
 
 const loginSchema = Joi.object({
