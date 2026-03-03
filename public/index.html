@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,7 +16,8 @@
             --glass-border: rgba(255, 255, 255, 0.1);
         }
 
-        body, html {
+        body,
+        html {
             margin: 0;
             padding: 0;
             font-family: 'Inter', sans-serif;
@@ -57,9 +59,17 @@
         }
 
         @keyframes float {
-            0% { transform: translate(0, 0); }
-            50% { transform: translate(30px, -30px); }
-            100% { transform: translate(0, 0); }
+            0% {
+                transform: translate(0, 0);
+            }
+
+            50% {
+                transform: translate(30px, -30px);
+            }
+
+            100% {
+                transform: translate(0, 0);
+            }
         }
 
         .container {
@@ -170,27 +180,70 @@
         }
 
         @keyframes pulse-ring {
-            0% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(52, 211, 153, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0); }
+            0% {
+                box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(52, 211, 153, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(52, 211, 153, 0);
+            }
+        }
+
+        /* Bot Image Styles */
+        .bot-image {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 1.5rem auto;
+            position: relative;
+            animation: float-img 4s ease-in-out infinite;
+            filter: drop-shadow(0 10px 15px rgba(108, 92, 231, 0.4));
+        }
+
+        .bot-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        @keyframes float-img {
+            0% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+
+            100% {
+                transform: translateY(0px);
+            }
         }
     </style>
 </head>
+
 <body>
     <div class="bg-gradient-1"></div>
     <div class="bg-gradient-2"></div>
 
     <div class="container">
         <div class="badge">API Status: Online</div>
-        
+
+        <div class="bot-image">
+            <img src="/logo.png" alt="Equaly Bot">
+        </div>
+
         <h1>Equaly API</h1>
-        
-        <p>Servicio RESTful robusto para el registro y gestión de usuarios del ecosistema Equaly. Construido con Node.js, Express y PostgreSQL.</p>
-        
+
+        <p>Servicio RESTful Equaly</p>
+
         <a href="/api-docs" class="btn">
             Explorar Documentación
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
             </svg>
         </a>
 
@@ -204,4 +257,5 @@
         </div>
     </div>
 </body>
+
 </html>
