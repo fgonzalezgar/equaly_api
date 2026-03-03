@@ -38,7 +38,7 @@ router.get('/', authMiddleware, investmentController.getUserInvestments);
  * /api/investments/checkout:
  *   post:
  *     summary: Create an investment intent with Stripe Checkout
- *     description: Creates a Checkout Session in Stripe and returns the checkoutUrl where the user should be redirected to pay. Requires JWT Token.
+ *     description: Creates a Checkout Session in Stripe and returns the checkoutUrl. Minimum investment $1 USD. Maximum unlimited. Requires JWT Token.
  *     tags: [Investments]
  *     security:
  *       - bearerAuth: []

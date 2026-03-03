@@ -29,10 +29,12 @@ const initPlansDB = async () => {
 
     INSERT INTO plans (name, level, daily_roi, duration_days, min_amount, max_amount)
     VALUES 
-        ('Oro', 'VIP', 4.0, 60, 5000, 25000),
-        ('Plata', 'PRO', 2.5, 45, 1000, 4999),
-        ('Bronce', 'BÁSICO', 1.5, 30, 100, 999)
-    ON CONFLICT (name) DO NOTHING;
+        ('Oro', 'VIP', 4.0, 60, 1, 999999999),
+        ('Plata', 'PRO', 2.5, 45, 1, 999999999),
+        ('Bronce', 'BÁSICO', 1.5, 30, 1, 999999999)
+    ON CONFLICT (name) DO UPDATE SET 
+        min_amount = EXCLUDED.min_amount,
+        max_amount = EXCLUDED.max_amount;
   `;
 
     try {
