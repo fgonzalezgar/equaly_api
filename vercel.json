@@ -7,7 +7,8 @@
             "config": {
                 "includeFiles": [
                     "src/routes/**",
-                    "public/**"
+                    "public/**",
+                    "node_modules/swagger-ui-dist/**"
                 ]
             }
         }
