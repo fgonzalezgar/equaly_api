@@ -36,6 +36,17 @@ class InvestmentModel {
         const { rows } = await db.query(query, [userId]);
         return rows;
     }
+
+    static async findBySessionId(sessionId) {
+        const query = `
+      SELECT i.*, p.name as plan_name, p.daily_roi, p.duration_days
+      FROM investments i
+      JOIN plans p ON i.plan_id = p.id
+      WHERE i.stripe_payment_id = $1;
+    `;
+        const { rows } = await db.query(query, [sessionId]);
+        return rows[0];
+    }
 }
 
 module.exports = InvestmentModel;

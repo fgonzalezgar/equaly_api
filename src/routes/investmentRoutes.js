@@ -94,5 +94,23 @@ router.post('/checkout', authMiddleware, investmentController.createInvestmentIn
  */
 router.post('/confirm', authMiddleware, investmentController.confirmInvestment);
 
+/**
+ * @swagger
+ * /api/investments/status/{sessionId}:
+ *   get:
+ *     summary: Verify status of a payment session
+ *     description: Checks the database for the status of a specific Stripe Checkout session.
+ *     tags: [Investments]
+ *     parameters:
+ *       - in: path
+ *         name: sessionId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Status retrieved
+ */
+router.get('/status/:sessionId', investmentController.checkPaymentStatus);
 
 module.exports = router;

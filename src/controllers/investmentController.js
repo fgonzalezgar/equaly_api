@@ -163,10 +163,36 @@ const confirmInvestment = async (req, res, next) => {
     }
 };
 
+const checkPaymentStatus = async (req, res, next) => {
+    try {
+        const { sessionId } = req.params;
+
+        // Find investment by its stripe_payment_id (which is the session_id)
+        const investment = await InvestmentModel.findBySessionId(sessionId);
+
+        if (!investment) {
+            return res.status(404).json({
+                success: false,
+                message: 'Inversión no encontrada'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            status: investment.status,
+            data: investment
+        });
+
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = {
     getPlans,
     getUserInvestments,
     createInvestmentIntent,
     confirmInvestment,
-    handleStripeWebhook
+    handleStripeWebhook,
+    checkPaymentStatus
 };
