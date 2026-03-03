@@ -98,6 +98,36 @@ router.get('/referrals', authMiddleware, userController.getReferrals);
 
 /**
  * @swagger
+ * /api/users/plans:
+ *   get:
+ *     summary: Get user's purchased plans
+ *     description: Returns a list of all active and past investment plans for the authenticated user. Requires JWT.
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Success
+ */
+router.get('/plans', authMiddleware, userController.getPurchasedPlans);
+
+/**
+ * @swagger
+ * /api/users/stocks:
+ *   get:
+ *     summary: Get user's purchased stocks
+ *     description: Returns a list of all stocks/actions purchased by the authenticated user. Requires JWT.
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Success
+ */
+router.get('/stocks', authMiddleware, userController.getPurchasedStocks);
+
+/**
+ * @swagger
  * /api/users:
  *   get:
  *     summary: List all registered users

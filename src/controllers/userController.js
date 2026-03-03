@@ -1,4 +1,6 @@
 const UserModel = require('../models/userModel');
+const InvestmentModel = require('../models/investmentModel');
+const StockModel = require('../models/stockModel');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
@@ -130,9 +132,39 @@ const getUsers = async (req, res, next) => {
     }
 };
 
+const getPurchasedPlans = async (req, res, next) => {
+    try {
+        const userId = req.user.id;
+        const investments = await InvestmentModel.findByUserId(userId);
+        res.status(200).json({
+            success: true,
+            count: investments.length,
+            data: investments
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+const getPurchasedStocks = async (req, res, next) => {
+    try {
+        const userId = req.user.id;
+        const stocks = await StockModel.findPurchasedByUserId(userId);
+        res.status(200).json({
+            success: true,
+            count: stocks.length,
+            data: stocks
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = {
     registerUser,
     loginUser,
     getReferrals,
-    getUsers
+    getUsers,
+    getPurchasedPlans,
+    getPurchasedStocks
 };
