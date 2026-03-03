@@ -14,7 +14,7 @@ const swaggerDefinition = {
   },
   servers: [
     {
-      url: 'https://equaly-api.vercel.app',
+      url: 'https://api.equaly.co',
       description: 'Production server',
     },
     {
