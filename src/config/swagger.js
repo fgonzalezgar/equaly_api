@@ -1,5 +1,4 @@
 const swaggerJSDoc = require('swagger-jsdoc');
-const swaggerUi = require('swagger-ui-express');
 const path = require('path');
 
 const swaggerDefinition = {
@@ -31,18 +30,48 @@ const options = {
 
 const swaggerSpec = swaggerJSDoc(options);
 
-const CSS_URL = "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui.min.css";
-
 const setupSwagger = (app) => {
-    app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
-        customCss:
-            '.swagger-ui .opblock .opblock-summary-path-description-wrapper { align-items: center !important; display: flex !important; flex-wrap: wrap !important; gap: 0 10px !important; padding: 0 10px !important; width: 100% !important; }',
-        customCssUrl: CSS_URL,
-        customJs: [
-            'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui-bundle.js',
-            'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui-standalone-preset.js'
-        ],
-    }));
+    // Endpoint to serve the raw swagger.json
+    app.get('/api-docs.json', (req, res) => {
+        res.setHeader('Content-Type', 'application/json');
+        res.send(swaggerSpec);
+    });
+
+    // Endpoint to render the Swagger UI via CDN (Ensures Vercel Compatibility)
+    app.get('/api-docs', (req, res) => {
+        res.send(`
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Equaly API - Swagger UI</title>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.11.0/swagger-ui.min.css" />
+        <style>
+          body { margin: 0; padding: 0; }
+          .swagger-ui .topbar { background-color: #0f172a; }
+        </style>
+      </head>
+      <body>
+        <div id="swagger-ui"></div>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.11.0/swagger-ui-bundle.js" crossorigin></script>
+        <script>
+          window.onload = () => {
+            window.ui = SwaggerUIBundle({
+              url: '/api-docs.json',
+              dom_id: '#swagger-ui',
+              deepLinking: true,
+              presets: [
+                SwaggerUIBundle.presets.apis,
+                SwaggerUIBundle.SwaggerUIStandalonePreset
+              ],
+            });
+          };
+        </script>
+      </body>
+      </html>
+    `);
+    });
 };
 
 module.exports = setupSwagger;
