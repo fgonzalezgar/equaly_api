@@ -22,6 +22,15 @@ const swaggerDefinition = {
       description: 'Local development server',
     },
   ],
+  components: {
+    securitySchemes: {
+      bearerAuth: {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+      }
+    }
+  },
 };
 
 const options = {

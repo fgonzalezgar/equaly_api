@@ -4,6 +4,7 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const path = require('path');
 const userRoutes = require('./routes/userRoutes');
+const investmentRoutes = require('./routes/investmentRoutes');
 const errorHandler = require('./middlewares/errorHandler');
 const swaggerSetup = require('./config/swagger');
 
@@ -20,6 +21,7 @@ app.use(express.static(path.join(__dirname, '../public')));
 
 // Routes
 app.use('/api/users', userRoutes);
+app.use('/api/investments', investmentRoutes);
 
 // Swagger Documentation Setup
 swaggerSetup(app);
