@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
+const path = require('path');
 const userRoutes = require('./routes/userRoutes');
 const errorHandler = require('./middlewares/errorHandler');
 const swaggerSetup = require('./config/swagger');
@@ -14,6 +15,9 @@ app.use(cors());
 app.use(express.json());
 app.use(morgan('dev'));
 
+// Static files
+app.use(express.static(path.join(__dirname, '../public')));
+
 // Routes
 app.use('/api/users', userRoutes);
 
@@ -22,13 +26,7 @@ swaggerSetup(app);
 
 // Root Endpoint
 app.get('/', (req, res) => {
-    res.json({
-        name: 'Equaly Registration API',
-        version: '1.0.0',
-        description: 'REST API para el registro de usuarios del formulario Equaly.',
-        documentation: '/api-docs',
-        status: 'online'
-    });
+    res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 
 // Error handling middleware
