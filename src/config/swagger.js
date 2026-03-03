@@ -2,44 +2,44 @@ const swaggerJSDoc = require('swagger-jsdoc');
 const path = require('path');
 
 const swaggerDefinition = {
-    openapi: '3.0.0',
-    info: {
-        title: 'Equaly Registration API',
-        version: '1.0.0',
-        description: 'API REST for Equaly User Registration Form. Includes PostgreSQL database with Supabase pooler.',
-        contact: {
-            name: 'API Support',
-        },
+  openapi: '3.0.0',
+  info: {
+    title: 'Equaly Registration API',
+    version: '1.0.0',
+    description: 'API REST for Equaly User Registration Form. Includes PostgreSQL database with Supabase pooler.',
+    contact: {
+      name: 'API Support',
     },
-    servers: [
-        {
-            url: 'https://equaly-api.vercel.app',
-            description: 'Production server',
-        },
-        {
-            url: 'http://localhost:3000',
-            description: 'Local development server',
-        },
-    ],
+  },
+  servers: [
+    {
+      url: 'https://equaly-api.vercel.app',
+      description: 'Production server',
+    },
+    {
+      url: 'http://localhost:3000',
+      description: 'Local development server',
+    },
+  ],
 };
 
 const options = {
-    swaggerDefinition,
-    apis: [path.join(__dirname, '../routes/*.js')], // Absolute path for Vercel
+  swaggerDefinition,
+  apis: [path.join(__dirname, '../routes/*.js')], // Absolute path for Vercel
 };
 
 const swaggerSpec = swaggerJSDoc(options);
 
 const setupSwagger = (app) => {
-    // Endpoint to serve the raw swagger.json
-    app.get('/api-docs.json', (req, res) => {
-        res.setHeader('Content-Type', 'application/json');
-        res.send(swaggerSpec);
-    });
+  // Endpoint to serve the raw swagger.json
+  app.get('/api-docs.json', (req, res) => {
+    res.setHeader('Content-Type', 'application/json');
+    res.send(swaggerSpec);
+  });
 
-    // Endpoint to render the Swagger UI via CDN (Ensures Vercel Compatibility)
-    app.get('/api-docs', (req, res) => {
-        res.send(`
+  // Endpoint to render the Swagger UI via CDN (Ensures Vercel Compatibility)
+  app.get('/api-docs', (req, res) => {
+    res.send(`
       <!DOCTYPE html>
       <html lang="en">
       <head>
@@ -55,6 +55,7 @@ const setupSwagger = (app) => {
       <body>
         <div id="swagger-ui"></div>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.11.0/swagger-ui-bundle.js" crossorigin></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.11.0/swagger-ui-standalone-preset.js" crossorigin></script>
         <script>
           window.onload = () => {
             window.ui = SwaggerUIBundle({
@@ -63,15 +64,16 @@ const setupSwagger = (app) => {
               deepLinking: true,
               presets: [
                 SwaggerUIBundle.presets.apis,
-                SwaggerUIBundle.SwaggerUIStandalonePreset
+                SwaggerUIStandalonePreset
               ],
+              layout: "StandaloneLayout"
             });
           };
         </script>
       </body>
       </html>
     `);
-    });
+  });
 };
 
 module.exports = setupSwagger;
